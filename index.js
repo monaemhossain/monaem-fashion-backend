@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
@@ -28,7 +28,7 @@ async function run() {
 
         const productsDatabase = client.db('productsDB').collection('products');
         const userDatabase = client.db('userDB').collection('users');
-        const userCart = client.db('userCartDB').collection('cart');
+        const userCartDatabase = client.db('userCartDB').collection('cart');
 
         // Read products
         app.get('/products', async (req, res) => {
@@ -37,7 +37,7 @@ async function run() {
             res.send(result);
         })
 
-        // product api
+        // write products api
         app.post('/products', async (req, res) => {
             const newProduct = req.body;
             // console.log(newProduct);
@@ -45,12 +45,40 @@ async function run() {
             res.send(result);
         })
 
-        // app.get('/products/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(_id) }
-        //     const result = await productsDatabase.findOne(query);
-        //     res.send(result);
-        // })
+        // get single product by id
+        app.get('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await productsDatabase.findOne(query);
+            res.send(result);
+        })
+
+        // update product
+        app.put('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updatedProduct = req.body;
+            // photo, productName, brandName, productType, productPrice, productDescription
+            const product = {
+                $set: {
+                    photo: updatedProduct.photo,
+                    productName: updatedProduct.productName,
+                    brandName: updatedProduct.brandName,
+                    productType: updatedProduct.productType,
+                    productPrice: updatedProduct.productPrice,
+                    productDescription: updatedProduct.productDescription,
+                }
+            }
+
+            const result = await productsDatabase.updateOne(filter, product, options);
+            res.send(result);
+        })
+
+
+
+
+
 
 
 
@@ -77,46 +105,31 @@ async function run() {
 
         // read user api
         app.get('/user-cart', async (req, res) => {
-            const cursor = userCart.find();
+            const cursor = userCartDatabase.find();
             const result = await cursor.toArray();
             res.send(result);
         })
+        // get single user cart item by id
+        app.get('/user-cart/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            console.log(query);
+            const result = await userCartDatabase.findOne(query);
 
+            res.send(result);
+        })
         // Write user cart data
         app.post('/user-cart', async (req, res) => {
             const newItem = req.body;
-            // console.log(newItem);
-            const result = await userCart.insertOne(newItem);
+            const result = await userCartDatabase.insertOne(newItem);
             res.send(result);
         })
-
-
-
-
-
-
-
-
-        // update product
-        app.put('/products/:id', async (req, res) => {
-            const id = req.params.id;
-            const filter = { _id: new ObjectId(id) }
-            const options = { upsert: true };
-            const updatedProduct = req.body;
-            // photo, productName, brandName, productType, productPrice, productDescription
-            const coffee = {
-                $set: {
-                    photo: updatedProduct.photo,
-                    productName: updatedProduct.productName,
-                    brandName: updatedProduct.brandName,
-                    productType: updatedProduct.productType,
-                    productPrice: updatedProduct.productPrice,
-                    productDescription: updatedProduct.productDescription,
-                }
-            }
-
-            const result = await productsDatabase.updateOne(filter, products, options);
-            res.send(result);
+        // delete cart item
+        app.delete('/user-cart/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await userCartDatabase.deleteOne(query)
+            res.send(result)
         })
 
 
