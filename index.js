@@ -24,10 +24,11 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const productsDatabase = client.db('productsDB').collection('products');
         const userDatabase = client.db('userDB').collection('users');
+        const userCart = client.db('userCartDB').collection('cart');
 
         // Read products
         app.get('/products', async (req, res) => {
@@ -35,18 +36,6 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         })
-
-        // Read users
-        app.get('/users', async (req, res) => {
-            const cursor = userDatabase.find();
-            const result = await cursor.toArray();
-            res.send(result);
-        })
-
-
-
-
-
 
         // product api
         app.post('/products', async (req, res) => {
@@ -56,7 +45,23 @@ async function run() {
             res.send(result);
         })
 
-        // user api
+        // app.get('/products/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const query = { _id: new ObjectId(_id) }
+        //     const result = await productsDatabase.findOne(query);
+        //     res.send(result);
+        // })
+
+
+
+        // read user api
+        app.get('/users', async (req, res) => {
+            const cursor = userDatabase.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        // Write user
         app.post('/users', async (req, res) => {
             const newUser = req.body;
             // console.log(newUser);
@@ -64,6 +69,55 @@ async function run() {
             res.send(result);
         })
 
+
+
+
+
+
+
+        // read user api
+        app.get('/user-cart', async (req, res) => {
+            const cursor = userCart.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        // Write user cart data
+        app.post('/user-cart', async (req, res) => {
+            const newItem = req.body;
+            // console.log(newItem);
+            const result = await userCart.insertOne(newItem);
+            res.send(result);
+        })
+
+
+
+
+
+
+
+
+        // update product
+        app.put('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updatedProduct = req.body;
+            // photo, productName, brandName, productType, productPrice, productDescription
+            const coffee = {
+                $set: {
+                    photo: updatedProduct.photo,
+                    productName: updatedProduct.productName,
+                    brandName: updatedProduct.brandName,
+                    productType: updatedProduct.productType,
+                    productPrice: updatedProduct.productPrice,
+                    productDescription: updatedProduct.productDescription,
+                }
+            }
+
+            const result = await productsDatabase.updateOne(filter, products, options);
+            res.send(result);
+        })
 
 
 
