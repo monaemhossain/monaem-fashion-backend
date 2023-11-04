@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+const jwt = require('jsonwebtoken'); 
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -25,6 +26,8 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
+
+        
 
         const productsDatabase = client.db('productsDB').collection('products');
         const userDatabase = client.db('userDB').collection('users');
@@ -78,10 +81,6 @@ async function run() {
 
 
 
-
-
-
-
         // read user api
         app.get('/users', async (req, res) => {
             const cursor = userDatabase.find();
@@ -96,11 +95,6 @@ async function run() {
             const result = await userDatabase.insertOne(newUser);
             res.send(result);
         })
-
-
-
-
-
 
 
         // read user api
